@@ -16,7 +16,7 @@ defmodule FlyMachines.MixProject do
       docs: [
         main: "readme",
         extras: ["README.md"],
-        source_ref: @url
+        source_ref: "main"
       ]
     ]
   end
@@ -32,7 +32,7 @@ defmodule FlyMachines.MixProject do
   defp deps do
     [
       {:req, "~> 0.4"},
-      {:ex_doc, "~> 0.27", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.27", only: :docs, runtime: false}
     ]
   end
 end
