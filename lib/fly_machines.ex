@@ -2,18 +2,9 @@ defmodule FlyMachines do
   @moduledoc """
   A minimalist client for the Fly Machines API.
 
-  Each function in this module maps to a single API endpoint.
-  Functions can return any of the following:
-
-  - `{:ok, %FlyMachines.Response{}}` - The request succeeded (status code >=200, <300).
-  - `{:error, %FlyMachines.Response{}}` - The request failed (status code outside 200-range).
-  - `{:error, exception}` - The request failed due to a lower-level networking error.
-
-  ## Accessing the Original Response
-
-  The `:req_response` field of the `FlyMachines.Response` struct contains the original
-  response from the `Req` library. This is only really useful if you are heavily modifying
-  the request, since `FlyMachines.Response` contains the HTTP status, headers, and body.
+  Each function in this module maps to an API endpoint. For convenience,
+  an `:error` tuple is returned if the response status code is not in the
+  200 range.
   """
 
   @doc """
@@ -24,6 +15,8 @@ defmodule FlyMachines do
       iex> FlyMachines.app_list("personal")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec app_list(org_slug :: String.t(), req_overrides :: keyword()) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def app_list(org_slug, req_overrides \\ []) when is_binary(org_slug) do
     req_overrides
     |> merge_config()
@@ -39,6 +32,8 @@ defmodule FlyMachines do
       iex> FlyMachines.app_create(%{org_slug: "personal", name: "my-app"})
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec app_create(body :: map(), req_overrides :: keyword()) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def app_create(body, req_overrides \\ []) when is_map(body) do
     req_overrides
     |> merge_config()
@@ -56,6 +51,8 @@ defmodule FlyMachines do
       iex> FlyMachines.app_delete("my-app")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec app_delete(app_name :: String.t(), req_overrides :: keyword()) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def app_delete(app_name, req_overrides \\ []) when is_binary(app_name) do
     req_overrides
     |> merge_config()
@@ -71,6 +68,8 @@ defmodule FlyMachines do
       iex> FlyMachines.app_retrieve("my-app")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec app_retrieve(app_name :: String.t(), req_overrides :: keyword()) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def app_retrieve(app_name, req_overrides \\ []) when is_binary(app_name) do
     req_overrides
     |> merge_config()
@@ -86,6 +85,8 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_list("my-app")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_list(app_name :: String.t(), req_overrides :: keyword()) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_list(app_name, req_overrides \\ [])
       when is_binary(app_name) do
     req_overrides
@@ -102,6 +103,8 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_create("my-app", %{config: %{image: "flyio/hellofly"}})
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_create(app_name :: String.t(), body :: map(), req_overrides :: keyword()) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_create(app_name, body, req_overrides \\ [])
       when is_binary(app_name) and is_map(body) do
     req_overrides
@@ -124,6 +127,13 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_update("my-app", "machine-id", %{config: %{image: "flyio/hellofly"}})
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_update(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          body :: map(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_update(app_name, machine_id, body, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) and is_map(body) do
     req_overrides
@@ -144,6 +154,12 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_retrieve("my-app", "machine-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_retrieve(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_retrieve(app_name, machine_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) do
     req_overrides
@@ -156,13 +172,23 @@ defmodule FlyMachines do
   end
 
   @doc """
-  Delete/destroy a machine. The machine must first be in the `stopped` state.
+  Delete/destroy a machine.
+
+  The machine must first be in the `stopped` state, otherwise deletion will fail.
 
   ## Examples
 
+      iex> {:ok, _} = FlyMachines.machine_stop("my-app", "machine-id")
+      iex> {:ok, _} = FlyMachines.machine_wait("my-app", "machine-id", params: [state: "stopped"])
       iex> FlyMachines.machine_delete("my-app", "machine-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_delete(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_delete(app_name, machine_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) do
     req_overrides
@@ -182,6 +208,12 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_metadata_retrieve("my-app", "machine-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_metadata_retrieve(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_metadata_retrieve(app_name, machine_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) do
     req_overrides
@@ -201,6 +233,13 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_metadata_delete("my-app", "machine-id", "key")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_metadata_delete(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          key :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_metadata_delete(app_name, machine_id, key, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) and is_binary(key) do
     req_overrides
@@ -220,6 +259,8 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_ps("my-app", "machine-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_ps(app_name :: String.t(), machine_id :: String.t(), req_overrides :: keyword()) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_ps(app_name, machine_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) do
     req_overrides
@@ -239,6 +280,12 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_start("my-app", "machine-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_start(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_start(app_name, machine_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) do
     req_overrides
@@ -258,6 +305,8 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_stop("my-app", "machine-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_stop(app_name :: String.t(), machine_id :: String.t(), req_overrides :: keyword()) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_stop(app_name, machine_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) do
     req_overrides
@@ -277,6 +326,12 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_restart("my-app", "machine-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_restart(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_restart(app_name, machine_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) do
     req_overrides
@@ -296,6 +351,12 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_cordon("my-app", "machine-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_cordon(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_cordon(app_name, machine_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) do
     req_overrides
@@ -313,10 +374,16 @@ defmodule FlyMachines do
   ## Example
 
       iex> params = [state: "started", timeout: 120]
-      iex> FlyMachines.wait_for_machine("my-app", "machine-id", params: params)
+      iex> FlyMachines.machine_wait("my-app", "machine-id", params: params)
       {:ok, %FlyMachines.Response{status: 200}}
   """
-  def wait_for_machine(app_name, machine_id, req_overrides \\ [])
+  @spec machine_wait(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
+  def machine_wait(app_name, machine_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) do
     req_overrides
     |> merge_config()
@@ -335,6 +402,12 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_versions_list("my-app", "machine-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_versions_list(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_versions_list(app_name, machine_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) do
     req_overrides
@@ -354,6 +427,12 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_uncordon("my-app", "machine-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_uncordon(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_uncordon(app_name, machine_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) do
     req_overrides
@@ -375,6 +454,13 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_lease_release("my-app", "machine-id", "lease-nonce")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_lease_acquire(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          body :: map(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_lease_acquire(app_name, machine_id, body, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) and is_map(body) do
     req_overrides
@@ -395,6 +481,13 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_lease_release("my-app", "machine-id", "lease-nonce")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_lease_release(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          lease_nonce :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_lease_release(app_name, machine_id, lease_nonce, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) and is_binary(lease_nonce) do
     req_overrides
@@ -415,6 +508,13 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_signal("my-app", "machine-id", %{signal: "SIGTERM"})
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_signal(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          body :: map(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_signal(app_name, machine_id, body, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) and is_map(body) do
     req_overrides
@@ -435,6 +535,12 @@ defmodule FlyMachines do
       iex> FlyMachines.machine_event_list("my-app", "machine-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec machine_event_list(
+          app_name :: String.t(),
+          machine_id :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def machine_event_list(app_name, machine_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(machine_id) do
     req_overrides
@@ -454,6 +560,8 @@ defmodule FlyMachines do
       iex> FlyMachines.volume_list("my-app")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec volume_list(app_name :: String.t(), req_overrides :: keyword()) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def volume_list(app_name, req_overrides \\ []) when is_binary(app_name) do
     req_overrides
     |> merge_config()
@@ -469,6 +577,8 @@ defmodule FlyMachines do
       iex> FlyMachines.volume_create("my-app", %{name: "my-volume", size_gb: 10})
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec volume_create(app_name :: String.t(), body :: map(), req_overrides :: keyword()) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def volume_create(app_name, body, req_overrides \\ [])
       when is_binary(app_name) and is_map(body) do
     req_overrides
@@ -489,6 +599,12 @@ defmodule FlyMachines do
       iex> FlyMachines.volume_retrieve("my-app", "volume-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec volume_retrieve(
+          app_name :: String.t(),
+          volume_id :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def volume_retrieve(app_name, volume_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(volume_id) do
     req_overrides
@@ -508,6 +624,13 @@ defmodule FlyMachines do
       iex> FlyMachines.volume_update("my-app", "volume-id", %{snapshot_retention: 1})
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec volume_update(
+          app_name :: String.t(),
+          volume_id :: String.t(),
+          body :: map(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def volume_update(app_name, volume_id, body, req_overrides \\ [])
       when is_binary(app_name) and is_binary(volume_id) and is_map(body) do
     req_overrides
@@ -528,6 +651,8 @@ defmodule FlyMachines do
       iex> FlyMachines.volume_delete("my-app", "volume-id")
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec volume_delete(app_name :: String.t(), volume_id :: String.t(), req_overrides :: keyword()) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def volume_delete(app_name, volume_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(volume_id) do
     req_overrides
@@ -547,6 +672,13 @@ defmodule FlyMachines do
       iex> FlyMachines.volume_extend("my-app", "volume-id", %{size_gb: 10})
       {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec volume_extend(
+          app_name :: String.t(),
+          volume_id :: String.t(),
+          body :: map(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def volume_extend(app_name, volume_id, body, req_overrides \\ [])
       when is_binary(app_name) and is_binary(volume_id) and is_map(body) do
     req_overrides
@@ -567,6 +699,12 @@ defmodule FlyMachines do
         iex> FlyMachines.volume_snapshots_list("my-app", "volume-id")
         {:ok, %FlyMachines.Response{status: 200}}
   """
+  @spec volume_snapshots_list(
+          app_name :: String.t(),
+          volume_id :: String.t(),
+          req_overrides :: keyword()
+        ) ::
+          {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
   def volume_snapshots_list(app_name, volume_id, req_overrides \\ [])
       when is_binary(app_name) and is_binary(volume_id) do
     req_overrides

@@ -1,6 +1,11 @@
 defmodule FlyMachines.Response do
   @moduledoc """
-  A struct representing a response from a request.
+  A struct representing a Fly Machines API response.
+
+  ## Accessing the `Req.Response`
+
+  The original response from the `Req` library is available in the `req_response` field.
+  Most users of this library will not need to access this field, but it is available just in-case.
   """
 
   @derive {Inspect, except: [:req_response]}
