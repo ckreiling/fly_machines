@@ -60,7 +60,7 @@ Since this client is implemented on top of `Req`, simply pass the `retry` option
 to a request. For example, to ensure a lease is acquired in case of conflict:
 
 ```elixir
-{:ok, %{body: %{nonce: nonce}}} = FlyMachines.machine_lease_acquire(
+{:ok, %{body: %{"nonce" => nonce}}} = FlyMachines.machine_lease_acquire(
   "my-app",
   "my-machine",
   %{ttl: 500},
@@ -165,6 +165,11 @@ mix docs
 
 Copyright (c) 2023 Christian Kreiling
 
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
