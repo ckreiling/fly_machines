@@ -373,23 +373,24 @@ defmodule FlyMachines do
 
   ## Example
 
-      iex> params = [state: "started", timeout: 120]
-      iex> FlyMachines.machine_wait("my-app", "machine-id", params: params)
+      iex> FlyMachines.machine_wait("my-app", "machine-id", %{state: "started", timeout: 120})
       {:ok, %FlyMachines.Response{status: 200}}
   """
   @spec machine_wait(
           app_name :: String.t(),
           machine_id :: String.t(),
+          params :: map(),
           req_overrides :: keyword()
         ) ::
           {:ok, FlyMachines.Response.t()} | {:error, FlyMachines.Response.t() | Exception.t()}
-  def machine_wait(app_name, machine_id, req_overrides \\ [])
-      when is_binary(app_name) and is_binary(machine_id) do
+  def machine_wait(app_name, machine_id, params, req_overrides \\ [])
+      when is_binary(app_name) and is_binary(machine_id) and is_map(params) do
     req_overrides
     |> merge_config()
     |> Req.get(
       url: "/apps/:app/machines/:machine_id/wait",
-      path_params: [app: app_name, machine_id: machine_id]
+      path_params: [app: app_name, machine_id: machine_id],
+      params: params
     )
     |> wrap_response()
   end

@@ -69,15 +69,17 @@ defmodule FlyMachinesTest do
 
       # the API errors out when stopping a machine that is not yet started
       assert {:ok, %Response{status: 200}} =
-               machine_wait(app, created["id"], params: [state: "started", timeout: 10])
+               machine_wait(app, created["id"], %{state: "started", timeout: 10})
 
       assert {:ok, %Response{status: 200}} = machine_stop(app, created["id"])
 
       # the API requires that stopping a machine be done with the instance_id
       assert {:ok, %Response{status: 200}} =
-               machine_wait(app, created["id"],
-                 params: [state: "stopped", timeout: 10, instance_id: created["instance_id"]]
-               )
+               machine_wait(app, created["id"], %{
+                 state: "stopped",
+                 timeout: 10,
+                 instance_id: created["instance_id"]
+               })
 
       assert {:ok, %Response{status: 200}} =
                machine_delete(app, created["id"])
@@ -88,7 +90,7 @@ defmodule FlyMachinesTest do
                machine_create(app, %{region: region, config: %{image: "flyio/hellofly:latest"}})
 
       assert {:ok, %Response{status: 200}} =
-               machine_wait(app, created["id"], params: [state: "started", timeout: 10])
+               machine_wait(app, created["id"], %{state: "started", timeout: 10})
 
       assert {:ok, %Response{status: 200}} = machine_cordon(app, created["id"])
 
