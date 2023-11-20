@@ -12,7 +12,7 @@ dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:fly_machines, github: "ckreiling/fly_machines", tag: "0.1.0"}
+    {:fly_machines, github: "ckreiling/fly_machines", tag: "0.2.0"}
   ]
 end
 ```
@@ -27,8 +27,8 @@ req_options = [
   auth: {:bearer, System.fetch_env!("FLY_API_TOKEN")}
 ]
 
-FlyMachines.apps_list("personal", req_options)
-# {:ok, [%{"name" => "..."}]}
+FlyMachines.app_list("personal", req_options)
+# {:ok, %FlyMachines.Response{body: [%{"name" => "..."}]}}
 ```
 
 For convenience, global client options can be specified in application
@@ -46,7 +46,7 @@ config :fly_machines, default: [
 
 defmodule FlyExample do
   def list_apps do
-    FlyMachines.apps_list("personal")
+    FlyMachines.app_list("personal")
   end
 end
 ```
@@ -57,7 +57,7 @@ application configuration via the `Req.update/2` function.
 ### Request Retries
 
 Since this client is implemented on top of `Req`, simply pass the `retry` option
-to a request. For example to ensure a lease is acquired in case of conflict:
+to a request. For example, to ensure a lease is acquired in case of conflict:
 
 ```elixir
 {:ok, %{body: %{nonce: nonce}}} = FlyMachines.machine_lease_acquire(
