@@ -1,3 +1,6 @@
+# An env file for development purposes.
+.env
+
 # The directory Mix will write compiled artifacts to.
 /_build/
 

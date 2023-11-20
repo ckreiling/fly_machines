@@ -449,7 +449,7 @@ defmodule FlyMachines do
 
   ## Examples
 
-      iex> {:ok, %{body: %{"nonce" => nonce}}} = FlyMachines.machine_lease_acquire("my-app", "machine-id")
+      iex> {:ok, %{body: %{"nonce" => nonce}}} = FlyMachines.machine_lease_acquire("my-app", "machine-id", %{ttl: 10})
       iex> {:ok, _} = FlyMachines.machine_update("my-app", "machine-id", %{config: %{image: "flyio/hellofly"}}, headers: [fly_machine_lease_nonce: nonce]])
       iex> FlyMachines.machine_lease_release("my-app", "machine-id", "lease-nonce")
       {:ok, %FlyMachines.Response{status: 200}}
